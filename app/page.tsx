@@ -1,18 +1,53 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Activity, BarChart3, Download, Eye, FileImage, KeyRound, LockKeyhole, ScanLine, ShieldCheck, Upload } from "lucide-react";
 
-declare global { interface Window { gtag?: (...args: unknown[]) => void } }
-
 export default function Home() {
+  type ActivityStats = { month: string; visits: number; encodes: number; scans: number };
   const [view, setView] = useState<"workspace" | "activity">("workspace");
   const [mode, setMode] = useState<"hide" | "reveal">("hide");
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
   const [key, setKey] = useState("");
   const [notice, setNotice] = useState("");
+  const [activityStats, setActivityStats] = useState<ActivityStats | null>(null);
+  const [activityUnavailable, setActivityUnavailable] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+
+  const recordActivity = (type: "visit" | "encode" | "scan") => {
+    void fetch("/api/activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type }),
+      keepalive: true,
+    }).catch(() => undefined);
+  };
+
+  useEffect(() => {
+    const sessionKey = "stega-visit-counted";
+    if (!sessionStorage.getItem(sessionKey)) {
+      sessionStorage.setItem(sessionKey, "true");
+      recordActivity("visit");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (view !== "activity") return;
+    const loadActivity = async () => {
+      try {
+        const response = await fetch("/api/activity", { cache: "no-store" });
+        if (!response.ok) throw new Error();
+        setActivityStats(await response.json() as ActivityStats);
+        setActivityUnavailable(false);
+      } catch {
+        setActivityUnavailable(true);
+      }
+    };
+    void loadActivity();
+    const timer = window.setInterval(loadActivity, 15000);
+    return () => window.clearInterval(timer);
+  }, [view]);
 
   const pick = (picked?: File) => {
     if (picked?.type.startsWith("image/")) { setFile(picked); setNotice(""); }
@@ -34,11 +69,13 @@ export default function Home() {
       for (const byte of bytes) for (let bit = 7; bit >= 0; bit--) { const pixel = Math.floor(n / 3) * 4 + n % 3; data.data[pixel] = (data.data[pixel] & 254) | ((byte >> bit) & 1); n++; }
       context.putImageData(data, 0, 0);
       const link = document.createElement("a"); link.href = canvas.toDataURL("image/png"); link.download = `stega-${file.name.replace(/\.[^.]+$/, "")}.png`; link.click();
-      window.gtag?.("event", "stega_encode"); setNotice("Encoded! Your PNG download has started.");
+      recordActivity("encode");
+      setNotice("Encoded! Your PNG download has started.");
     } else {
+      recordActivity("scan");
       let bits = "", output = "";
-      for (let i = 0; i < data.data.length; i += 4) for (let channel = 0; channel < 3; channel++) { bits += data.data[i + channel] & 1; if (bits.length === 8) { const char = String.fromCharCode(parseInt(bits, 2)); if (char === "\0") { const parts = output.split("|"); window.gtag?.("event", "stega_scan"); return setNotice(parts[0] === "STGW" ? `Hidden message: ${parts.slice(2).join("|") || "(empty)"}` : "No compatible message found."); } output += char; bits = ""; } }
-      window.gtag?.("event", "stega_scan"); setNotice("No compatible message found.");
+      for (let i = 0; i < data.data.length; i += 4) for (let channel = 0; channel < 3; channel++) { bits += data.data[i + channel] & 1; if (bits.length === 8) { const char = String.fromCharCode(parseInt(bits, 2)); if (char === "\0") { const parts = output.split("|"); return setNotice(parts[0] === "STGW" ? `Hidden message: ${parts.slice(2).join("|") || "(empty)"}` : "No compatible message found."); } output += char; bits = ""; } }
+      setNotice("No compatible message found.");
     }
   };
 
@@ -79,12 +116,13 @@ export default function Home() {
       <div className="mb-10 max-w-3xl">
         <div className="mb-4 flex items-center gap-3"><span className="h-px w-10 bg-[#ff3cac]"/><p className="font-mono text-xs tracking-[.22em] text-[#ff3cac]">ACTIVITY MONITOR</p></div>
         <h1 className="text-4xl font-black leading-[.95] tracking-[-.04em] sm:text-6xl">Signals are live.<br/><span className="text-cyan-300">Privacy stays intact.</span></h1>
-        <p className="mt-6 max-w-2xl text-sm leading-6 text-slate-400">A simple view of how visitors use Stega_What. Images, hidden messages, and passphrases always remain private.</p>
+        <p className="mt-6 max-w-2xl text-sm leading-6 text-slate-400">Live totals for this month. Images, hidden messages, and passphrases always remain private.</p>
+        {activityUnavailable && <p className="mt-3 font-mono text-xs text-amber-300">Activity data will appear after the connected deployment is live.</p>}
       </div>
       <div className="grid gap-5 md:grid-cols-3">
-        <article className="panel rounded-2xl border border-white/10 p-6"><BarChart3 className="mb-8 text-[#ff3cac]"/><p className="label">PAGE VIEWS</p><strong className="my-3 block text-2xl">Visitor activity</strong><p className="text-sm leading-6 text-slate-500">See how many people visit Stega_What over time.</p></article>
-        <article className="panel rounded-2xl border border-white/10 p-6"><Download className="mb-8 text-cyan-300"/><p className="label">ENCODE</p><strong className="my-3 block text-2xl">Encoding activity</strong><p className="text-sm leading-6 text-slate-500">Monitor how often visitors create encoded images.</p></article>
-        <article className="panel rounded-2xl border border-white/10 p-6"><Activity className="mb-8 text-emerald-300"/><p className="label">DECODE</p><strong className="my-3 block text-2xl">Scanning activity</strong><p className="text-sm leading-6 text-slate-500">Monitor how often visitors scan images for messages.</p></article>
+        <article className="panel rounded-2xl border border-white/10 p-6"><BarChart3 className="mb-8 text-[#ff3cac]"/><p className="label">VISITS THIS MONTH</p><strong className="my-3 block text-4xl">{activityStats?.visits ?? "—"}</strong><p className="text-sm leading-6 text-slate-500">Browser sessions recorded during {activityStats?.month ?? "the current month"}.</p></article>
+        <article className="panel rounded-2xl border border-white/10 p-6"><Download className="mb-8 text-cyan-300"/><p className="label">ENCODES THIS MONTH</p><strong className="my-3 block text-4xl">{activityStats?.encodes ?? "—"}</strong><p className="text-sm leading-6 text-slate-500">Images successfully encoded by visitors.</p></article>
+        <article className="panel rounded-2xl border border-white/10 p-6"><Activity className="mb-8 text-emerald-300"/><p className="label">SCANS THIS MONTH</p><strong className="my-3 block text-4xl">{activityStats?.scans ?? "—"}</strong><p className="text-sm leading-6 text-slate-500">Images scanned for compatible hidden messages.</p></article>
       </div>
     </section>}
     <footer className="relative mx-auto flex max-w-7xl justify-between px-5 py-7 font-mono text-[11px] text-slate-500 sm:px-8"><span>STEGA_WHAT / SIGNAL LAB</span><span>USE RESPONSIBLY · 2026</span></footer>
