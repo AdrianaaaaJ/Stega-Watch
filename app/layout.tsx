@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const analyticsId = "G-MKCPBJSMV2";
+const analyticsId = "G-WD6LKJKZXX";
 
 export const metadata: Metadata = {
   title: "Stega_What — Signal Lab",
