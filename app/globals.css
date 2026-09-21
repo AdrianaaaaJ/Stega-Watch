@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "../vendor/shadcn-tailwind-4.13.0.css";
 :root { --background:#080a1d; --foreground:#eef2ff; }
 * { box-sizing:border-box; } html { scroll-behavior:smooth; } body { background:var(--background); color:var(--foreground); font-family:Arial,Helvetica,sans-serif; }
 .arcade-grid { background-image:linear-gradient(rgba(41,226,255,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(41,226,255,.11) 1px,transparent 1px); background-size:32px 32px; mask-image:linear-gradient(to bottom,black,transparent 70%); }

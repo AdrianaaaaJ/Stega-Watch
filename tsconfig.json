@@ -26,11 +26,7 @@
       "@/*": [
         "./*"
       ]
-    },
-    "types": [
-      "node",
-      "@cloudflare/workers-types"
-    ]
+    }
   },
   "include": [
     "next-env.d.ts",
@@ -41,7 +37,6 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules",
-    "examples"
+    "node_modules"
   ]
 }
