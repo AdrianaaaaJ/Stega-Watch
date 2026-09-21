@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../vendor/shadcn-tailwind-4.13.0.css";
+:root { --background:#080a1d; --foreground:#eef2ff; }
+* { box-sizing:border-box; } html { scroll-behavior:smooth; } body { background:var(--background); color:var(--foreground); font-family:Arial,Helvetica,sans-serif; }
+.arcade-grid { background-image:linear-gradient(rgba(41,226,255,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(41,226,255,.11) 1px,transparent 1px); background-size:32px 32px; mask-image:linear-gradient(to bottom,black,transparent 70%); }
+.panel { background:linear-gradient(145deg,rgba(21,25,67,.92),rgba(11,13,37,.95)); box-shadow:0 20px 60px rgba(0,0,0,.22); }.label { font-family:ui-monospace,monospace;font-size:.68rem;letter-spacing:.15em;color:#9ba9c8; }
+.tab { display:flex;flex:1;justify-content:center;align-items:center;gap:.5rem;border-radius:.65rem;padding:.75rem .5rem;font-family:ui-monospace,monospace;font-size:.72rem;letter-spacing:.04em;color:#91a0c3; }.tab-on { background:#ff3cac;color:#180923;box-shadow:0 0 20px rgba(255,60,172,.42);font-weight:800; }
+.dropzone { display:flex;min-height:11rem;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;border:1px dashed rgba(34,225,255,.45);border-radius:.85rem;background:rgba(26,221,255,.045);padding:1.25rem;font-size:.9rem;transition:.2s; }.dropzone:hover { background:rgba(26,221,255,.1);border-color:#22e1ff; }.dropzone span{font-size:.75rem;color:#8895b4}
+.field { border:1px solid rgba(255,255,255,.13);border-radius:.7rem;background:rgba(3,5,19,.55);padding:.7rem .8rem;color:white;outline:none;font-size:.9rem; }.field:focus { border-color:#22e1ff;box-shadow:0 0 0 3px rgba(34,225,255,.12); }.field::placeholder{color:#687594}
+.arcade-btn { display:flex;align-items:center;justify-content:center;gap:.5rem;border-radius:.7rem;background:#22e1ff;padding:.75rem 1rem;color:#06121c;font-family:ui-monospace,monospace;font-size:.75rem;font-weight:900;letter-spacing:.03em;box-shadow:0 0 22px rgba(34,225,255,.3); }.arcade-btn:hover{background:#79edff}.arcade-btn:active{transform:translateY(1px)}
+.info { display:grid;grid-template-columns:auto 1fr;column-gap:.75rem;border-left:1px solid rgba(255,255,255,.12);padding-left:1.25rem; }.info svg{grid-row:span 2;margin-top:.15rem}.info b{font-size:.9rem}.info span{margin-top:.3rem;color:#98a4c1;font-size:.8rem;line-height:1.4}
